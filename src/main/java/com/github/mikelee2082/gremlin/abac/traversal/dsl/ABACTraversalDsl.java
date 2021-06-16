@@ -1,6 +1,7 @@
-package com.github.mikelee2082.gremlin.abac.authz;
+package com.github.mikelee2082.gremlin.abac.traversal.dsl;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.GremlinDsl;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -8,17 +9,11 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Arrays;
 
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.USER_STEP_LABEL;
-import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens.*;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.*;
 
-@GremlinDsl(traversalSource = "com.github.mikelee2082.gremlin.abac.authz.ABACTraversalSourceDsl")
+@GremlinDsl(traversalSource = "com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalSourceDsl")
 public interface ABACTraversalDsl<S, E> extends GraphTraversal.Admin<S, E> {
     int BCRYPT_ROUNDS = 4;
-
-    String VERTEX_LABEL_ATTRIBUTE = "attribute";
-    String PROPERTY_ATTRIBUTE_NAME = "attributeName";
-    String ATTRIBUTE_EDGE_LABEL = "hasAttribute";
-    String ATTRIBUTE_STEP_LABEL = "attribute";
 
     /**
      * Finds all users
@@ -47,30 +42,41 @@ public interface ABACTraversalDsl<S, E> extends GraphTraversal.Admin<S, E> {
         return has(VERTEX_LABEL_USER, PROPERTY_USERNAME, username)
                 .fold()
                 .coalesce(__.unfold(),
-                        __.addV(VERTEX_LABEL_USER).property(PROPERTY_USERNAME, username))
-                .property(PROPERTY_PASSWORD, BCrypt.hashpw(password, BCrypt.gensalt(ABACTraversal.BCRYPT_ROUNDS)));
+                        __.addV(VERTEX_LABEL_USER)
+                                .property(PROPERTY_USERNAME, username)
+                                .property(PROPERTY_PASSWORD, BCrypt.hashpw(password, BCrypt.gensalt(ABACTraversal.BCRYPT_ROUNDS))));
     }
 
     /**
      * Add a new attribute vertex if one with the same attribute name does not exist
      */
-    /*
     default GraphTraversal<S, Vertex> attribute(final String attributeName) {
         return has(VERTEX_LABEL_ATTRIBUTE, PROPERTY_ATTRIBUTE_NAME, attributeName)
                 .fold()
                 .coalesce(__.unfold(),
                         __.addV(VERTEX_LABEL_ATTRIBUTE).property(PROPERTY_ATTRIBUTE_NAME, attributeName));
     }
-    */
-    /**
-     * Create an edge between an attribute vertex and a user. It will create the attribute if it does not exist already
-     */
-    default GraphTraversal<S, Vertex> attribute(final String attributeName) {
+
+    default GraphTraversal<S, Vertex> attribute(final Traversal<?, ?> traversal) {
+        return has(VERTEX_LABEL_ATTRIBUTE, PROPERTY_ATTRIBUTE_NAME, traversal)
+                .fold()
+                .coalesce(__.unfold(),
+                        __.addV(VERTEX_LABEL_ATTRIBUTE).property(PROPERTY_ATTRIBUTE_NAME, traversal));
+    }
+
+    default GraphTraversal<S, Vertex> authorize(final String attributeName, final String... more) {
+        final String[] attributes = Arrays.copyOf(more, more.length + 1);
+        attributes[more.length] = attributeName;
         return hasLabel(VERTEX_LABEL_USER)
                 .as(USER_STEP_LABEL)
-                .V().has(VERTEX_LABEL_ATTRIBUTE, PROPERTY_ATTRIBUTE_NAME, attributeName)
+                .V().has(VERTEX_LABEL_ATTRIBUTE, PROPERTY_ATTRIBUTE_NAME, P.within(attributes))
                 .addE(ATTRIBUTE_EDGE_LABEL).from(USER_STEP_LABEL)
                 .outV();
+    }
+
+    default GraphTraversal<S, Vertex> attributes() {
+        return hasLabel(VERTEX_LABEL_USER)
+                .out(ATTRIBUTE_EDGE_LABEL);
     }
 
 }

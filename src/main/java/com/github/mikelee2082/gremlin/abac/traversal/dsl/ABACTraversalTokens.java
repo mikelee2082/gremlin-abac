@@ -1,10 +1,12 @@
-package com.github.mikelee2082.gremlin.abac.authz;
+package com.github.mikelee2082.gremlin.abac.traversal.dsl;
+
+import org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens;
 
 public final class ABACTraversalTokens {
 
-    public static final String VERTEX_LABEL_USER = "user";
-    public static final String PROPERTY_USERNAME = "username";
-    public static final String PROPERTY_PASSWORD = "password";
+    public static final String VERTEX_LABEL_USER = CredentialGraphTokens.VERTEX_LABEL_USER;
+    public static final String PROPERTY_USERNAME = CredentialGraphTokens.PROPERTY_USERNAME;
+    public static final String PROPERTY_PASSWORD = CredentialGraphTokens.PROPERTY_PASSWORD;
     public static final String VERTEX_LABEL_ATTRIBUTE = "attribute";
     public static final String PROPERTY_ATTRIBUTE_NAME = "attributeName";
     public static final String ATTRIBUTE_EDGE_LABEL = "hasAttribute";
