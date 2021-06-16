@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_AND;
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_OR;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_AND;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_OR;
 
 public class ABACAuthorizer implements Authorizer {
 

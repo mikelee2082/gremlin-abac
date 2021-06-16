@@ -1,5 +1,7 @@
 package com.github.mikelee2082.gremlin.abac.authz;
 
+import com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversal;
+import com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalSource;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticatedUser;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
 import org.apache.tinkerpop.gremlin.server.auth.SimpleAuthenticator;
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.*;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.*;
 
 public class SimpleABACAuthenticator extends SimpleAuthenticator {
     private static final Logger logger = LoggerFactory.getLogger(SimpleABACAuthenticator.class);
