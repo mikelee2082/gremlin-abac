@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_AND;
-import static com.github.mikelee2082.gremlin.abac.authz.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_OR;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_AND;
+import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_OR;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,5 +1,6 @@
 package com.github.mikelee2082.gremlin.abac.authz;
 
+import com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalSource;
 import org.apache.commons.configuration2.MapConfiguration;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticatedUser;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
@@ -24,7 +25,7 @@ class SimpleABACAuthenticatorTest {
 
     @Test
     void authenticate() {
-        Map<String, Object> config = new HashMap<>();
+        final Map<String, Object> config = new HashMap<>();
         config.put("gremlin.graph", "org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph");
         config.put("gremlin.tinkergraph.vertexIdManager", "LONG");
         config.put("gremlin.tinkergraph.graphLocation", "/tmp/credentials.kryo");
@@ -32,15 +33,15 @@ class SimpleABACAuthenticatorTest {
         final TinkerGraph graph = TinkerGraph.open(new MapConfiguration(config));
         graph.clear();
         final ABACTraversalSource g = graph.traversal(ABACTraversalSource.class);
-        g.createAttribute("ROLE1").iterate();
-        g.createAttribute("ROLE2").iterate();
+        g.attribute("ROLE1").iterate();
+        g.attribute("ROLE2").iterate();
         g.user("username", "password").iterate();
-        g.users("username").attribute("ROLE1").attribute("ROLE2").iterate();
+        g.users("username").authorize("ROLE1", "ROLE2").iterate();
         graph.close();
-        Map<String, Object> credentialsConfig = new HashMap<>();
+        final Map<String, Object> credentialsConfig = new HashMap<>();
         credentialsConfig.put(SimpleABACAuthenticator.CONFIG_CREDENTIALS_DB, config);
         authenticator.setup(credentialsConfig);
-        Map<String, String> credentials = new HashMap<>();
+        final Map<String, String> credentials = new HashMap<>();
         credentials.put("username", "username");
         credentials.put("password", "password");
         final AuthenticatedUser user;
