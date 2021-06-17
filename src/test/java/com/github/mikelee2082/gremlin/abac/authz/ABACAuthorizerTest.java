@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_AND;
 import static com.github.mikelee2082.gremlin.abac.traversal.dsl.ABACTraversalTokens.SECURITY_ATTRIBUTE_KEY_OR;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class ABACAuthorizerTest {
@@ -99,5 +98,65 @@ class ABACAuthorizerTest {
         final RequestMessage requestMessage = RequestMessage.build(Tokens.OPS_EVAL)
                 .create();
         assertThrows(AuthorizationException.class, () -> authorizer.authorize(user, requestMessage));
+    }
+
+    @Test
+    public void shouldHideUnauthorizedVertices() {
+        final Authorizer authorizer = new ABACAuthorizer();
+        final AuthenticatedUser user = new ABACAuthenticatedUser("USER1");
+        g.inject(1,2).unfold().addV("TEST").property(SECURITY_ATTRIBUTE_KEY_AND, List.of("ROLE1")).iterate();
+        final long vertexCount = g.V().hasLabel("TEST").count().next();
+        assertEquals(2L, vertexCount);
+        final JavaTranslator<GraphTraversalSource, GraphTraversal.Admin<?, ?>> translator = JavaTranslator.of(g);
+        final Bytecode bytecode = g.V().hasLabel("TEST").count().asAdmin().getBytecode();
+        try {
+            final Bytecode restrictedBytecode = authorizer.authorize(user, bytecode, Collections.emptyMap());
+            final GraphTraversal finalTraversal = translator.translate(restrictedBytecode);
+            final long newVertexCount = (long) finalTraversal.next();
+            assertEquals(0, newVertexCount);
+        } catch (AuthorizationException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    public void shouldHideUnauthorizedVertexProperties() {
+        final Authorizer authorizer = new ABACAuthorizer();
+        final AuthenticatedUser user = new ABACAuthenticatedUser("USER1");
+        g.addV("TEST").property("name", "sam", SECURITY_ATTRIBUTE_KEY_AND, List.of("ROLE1")).iterate();
+        final long vertexPropertyCount = g.V().hasLabel("TEST").properties("name").count().next();
+        assertEquals(1L, vertexPropertyCount);
+        final JavaTranslator<GraphTraversalSource, GraphTraversal.Admin<?, ?>> translator = JavaTranslator.of(g);
+        final Bytecode bytecode = g.V().hasLabel("TEST").properties("name").count().asAdmin().getBytecode();
+        try {
+            final Bytecode restrictedBytecode = authorizer.authorize(user, bytecode, Collections.emptyMap());
+            final GraphTraversal finalTraversal = translator.translate(restrictedBytecode);
+            final long newVertexPropertyCount = (long) finalTraversal.next();
+            assertEquals(0, newVertexPropertyCount);
+        } catch (AuthorizationException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    public void shouldHideUnauthorizedEdges() {
+        final Authorizer authorizer = new ABACAuthorizer();
+        final AuthenticatedUser user = new ABACAuthenticatedUser("USER1", List.of("ROLE2"));
+        final Vertex v1 = g.addV("TEST").next();
+        final Vertex v2 = g.addV("TEST").next();
+        g.addE("connection").from(v1).to(v2).property(SECURITY_ATTRIBUTE_KEY_AND, List.of("ROLE1")).iterate();
+        g.addE("connection").from(v1).to(v2).property(SECURITY_ATTRIBUTE_KEY_AND, List.of("ROLE2")).iterate();
+        final long edgeCount = g.E().hasLabel("connection").count().next();
+        assertEquals(2L, edgeCount);
+        final JavaTranslator<GraphTraversalSource, GraphTraversal.Admin<?, ?>> translator = JavaTranslator.of(g);
+        final Bytecode bytecode = g.E().hasLabel("connection").count().asAdmin().getBytecode();
+        try {
+            final Bytecode restrictedBytecode = authorizer.authorize(user, bytecode, Collections.emptyMap());
+            final GraphTraversal finalTraversal = translator.translate(restrictedBytecode);
+            final long newEdgeCount = (long) finalTraversal.next();
+            assertEquals(1L, newEdgeCount);
+        } catch (AuthorizationException e) {
+            fail(e);
+        }
     }
 }
